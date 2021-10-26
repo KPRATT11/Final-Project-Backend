@@ -1,0 +1,53 @@
+Date : 2021-10-22 17:52:30
+Directory : /home/keeganpratt/sei/projects/final-project/backend
+Total : 22 files,  3551 codes, 13 comments, 125 blanks, all 3689 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JSON       |          2 |      2,597 |          0 |          2 |      2,599 |
+| JavaScript |         18 |        857 |         13 |        110 |        980 |
+| SQL        |          2 |         97 |          0 |         13 |        110 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                            | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                               |         22 |      3,551 |         13 |        125 |      3,689 |
+| database                                                                        |         10 |        533 |          0 |         62 |        595 |
+| lib                                                                             |          7 |        132 |          1 |         23 |        156 |
+| lib/auth                                                                        |          2 |         47 |          1 |          9 |         57 |
+| lib/formulas                                                                    |          2 |         25 |          0 |          5 |         30 |
+| models                                                                          |          1 |          0 |          0 |          2 |          2 |
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                        | language   | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| /home/keeganpratt/sei/projects/final-project/backend/database/deleters.js       | JavaScript |         36 |          0 |          6 |         42 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/helpers.js        | JavaScript |          9 |          0 |          3 |         12 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/inserters.js      | JavaScript |         44 |          0 |          9 |         53 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/miniSeed.js       | JavaScript |         33 |          0 |          5 |         38 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/pad.sql           | SQL        |         43 |          0 |          3 |         46 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/patchers.js       | JavaScript |         15 |          0 |          3 |         18 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/randomCreators.js | JavaScript |         85 |          0 |          8 |         93 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/schema.sql        | SQL        |         54 |          0 |         10 |         64 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/seed.js           | JavaScript |         71 |          0 |          4 |         75 |
+| /home/keeganpratt/sei/projects/final-project/backend/database/selectors.js      | JavaScript |        143 |          0 |         11 |        154 |
+| /home/keeganpratt/sei/projects/final-project/backend/lib/actions.js             | JavaScript |         17 |          0 |          3 |         20 |
+| /home/keeganpratt/sei/projects/final-project/backend/lib/auth/authUsers.js      | JavaScript |         26 |          0 |          4 |         30 |
+| /home/keeganpratt/sei/projects/final-project/backend/lib/auth/signUp.js         | JavaScript |         21 |          1 |          5 |         27 |
+| /home/keeganpratt/sei/projects/final-project/backend/lib/dateHelp.js            | JavaScript |         25 |          0 |          4 |         29 |
+| /home/keeganpratt/sei/projects/final-project/backend/lib/dbQuery.js             | JavaScript |         18 |          0 |          2 |         20 |
+| /home/keeganpratt/sei/projects/final-project/backend/lib/formulas/itemScore.js  | JavaScript |         16 |          0 |          3 |         19 |
+| /home/keeganpratt/sei/projects/final-project/backend/lib/formulas/userWeight.js | JavaScript |          9 |          0 |          2 |         11 |
+| /home/keeganpratt/sei/projects/final-project/backend/models/commentModel.js     | JavaScript |          0 |          0 |          2 |          2 |
+| /home/keeganpratt/sei/projects/final-project/backend/package-lock.json          | JSON       |      2,573 |          0 |          1 |      2,574 |
+| /home/keeganpratt/sei/projects/final-project/backend/package.json               | JSON       |         24 |          0 |          1 |         25 |
+| /home/keeganpratt/sei/projects/final-project/backend/pad.js                     | JavaScript |          6 |          0 |          0 |          6 |
+| /home/keeganpratt/sei/projects/final-project/backend/server.js                  | JavaScript |        283 |         12 |         36 |        331 |
+| Total                                                                           |            |      3,551 |         13 |        125 |      3,689 |
++---------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
