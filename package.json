@@ -17,7 +17,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   },
   "author": "Keegan Pratt",
   "license": "ISC"

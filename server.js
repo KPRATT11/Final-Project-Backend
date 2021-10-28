@@ -28,11 +28,11 @@ const { hasUserVoted } = require("./database/helpers")
 /* --- USER AUTHENTICATION IMPORTS ---*/
 const { auth } = require("express-openid-connect");
 const { isFirstSignUp } = require("./lib/auth/signUp");
-const { isCurrentUser, getCurrentUser } = require("./lib/auth/authUsers");
+const { isCurrentUser, getMetaData } = require("./lib/auth/authUsers");
 
 
 const app = express()
-const port = 2000
+const port = process.env.PORT || 2000;
 
 app.use(express.json()); //Allows us to respond with JSON
 app.use(
@@ -47,14 +47,17 @@ app.use(
 );
 
 app.get('/', (req, res) => {
-	console.log(req.oidc.user.sub)
 	if (req.oidc.isAuthenticated() === true){
 		if (isFirstSignUp(req.oidc.user.sub)){
-			insertUser({
-				id: req.oidc.user.sub,
-				creation_date: new Date(),
-				username: 'keegan'
+			let userMetaData = getMetaData(req.oidc.user.sub)
+			userMetaData.then(res => {
+				insertUser({
+					id: req.oidc.user.sub,
+					creation_date: new Date(),
+					username: res.data.user_metadata.custom_username
+				})
 			})
+
 		}
 	};
 	res.redirect('http://localhost:3000/')
@@ -75,7 +78,7 @@ app.post('/api/comment', (req, res) => {
 		target_id,
 		for_post: true,
 		author_id: req.oidc.user.sub,
-		submitted_at: newISO(),
+		submitted_at: new Date(),
 		rating: 0
 	}
 	insertComment(detailsObject).then(response => {
@@ -120,21 +123,36 @@ app.patch("/api/comment", (req, res) => {
 //COMMUNITIES
 app.get("/api/community", (req, res) => {
 	let { id } = req.query
-	selectCommunity({id, user_id: req.oidc.user.sub}).then(response => {
-		res.json(response.rows[0])
-	})
+	if (req.oidc.isAuthenticated()){
+		selectCommunity({id, user_id: req.oidc.user.sub}).then(response => {
+			res.json({
+				...response.rows[0],
+				logged_in: true
+			})
+		})
+	}else {
+		selectCommunity({id, user_id: ''}).then(response => {
+			res.json({
+				...response.rows[0],
+				logged_in: false
+			})
+		})
+	}
 })
 
 app.post("/api/community", (req, res) => {
 	let { title, sidebar } = req.body
 	let detailsObject = {
+		logged_in: req.oidc.isAuthenticated(),
 		owner_id: req.oidc.user.sub,
 		title, 
 		sidebar
 	}
 	insertCommunity(detailsObject).then(response => {
 		createAction(1, 'createCommunity')
-		res.json(response.rows[0])
+		insertFollows({community_id: response.rows[0].id, user_id: req.oidc.user.sub}).then(() => {
+			res.json(response.rows[0])
+		})
 	})
 })
 
@@ -146,22 +164,49 @@ app.delete("/api/community", (req, res) => {
 })
 
 app.get('/api/followedCommunities', (req, res) => {
-	selectFollowedCommunities({id: req.oidc.user.sub}).then(response => {
-		res.json(response.rows)
-	})
+	console.log('yes yes')
+	if (req.oidc.isAuthenticated()){
+		selectFollowedCommunities({id: req.oidc.user.sub}).then(response => {
+			res.json({
+					communities: response.rows,
+					logged_in: true
+				})
+		})
+	}else {
+		console.log('yes')
+		res.json({
+			logged_in: false
+		})
+	}
 })
 
 app.get('/api/searchedCommunities', (req, res) => {
 	let { searchQuery } = req.query
-	selectSearchedCommunities({id: req.oidc.user.sub, search: searchQuery}).then(response => {
-		res.json(response.rows)
-	})
+	if (searchQuery.length === 0){
+		res.json([])
+		return
+	}
+	if (req.oidc.isAuthenticated()){
+		selectSearchedCommunities({id: req.oidc.user.sub, search: searchQuery}).then(response => {
+			res.json(response.rows)
+		})
+	}else {
+		selectSearchedCommunities({id: '', search: searchQuery}).then(response => {
+			res.json(response.rows)
+		})
+	}
 })
 
 app.get('/api/reccomendedCommunities', (req, res) => {
-	selectPopularCommunities({id: req.oidc.user.sub}).then(response => {
-		res.json(response.rows)
-	})
+	if (req.oidc.isAuthenticated()){
+		selectPopularCommunities({id: req.oidc.user.sub}).then(response => {
+			res.json(response.rows)
+		})
+	}else {
+		selectPopularCommunities({id: ''}).then(response => {
+			res.json(response.rows)
+		})
+	}
 })
 
 app.get('/api/allPostsOfCommunity', (req, res) => {
@@ -176,7 +221,9 @@ app.get('/api/allPostsOfCommunity', (req, res) => {
 				numberiseDate(response.rows[i].posted_at)
 				return {
 					...response.rows[i],
-					userOwns: isCurrentUser(response.rows[i].author_id, req.oidc.user.sub),
+					userOwns: isCurrentUser(response.rows[i].author_id, 
+						req.oidc.isAuthenticated() ? req.oidc.user.sub : ''
+					),
 					score: calcPostScore(response.rows[i].rating, response.rows[i].posted_at, replies.rows.length),
 					replyCount: replies.rows.length,
 				}
@@ -184,7 +231,7 @@ app.get('/api/allPostsOfCommunity', (req, res) => {
 			let voteGetters = []
 			vals.forEach(val => {
 				if (val.rows.length > 0){
-					voteGetters.push(hasUserVoted({ user_id: req.oidc.user.sub, for_post: true, target_id:val.rows[0].id }))
+					voteGetters.push(hasUserVoted({ user_id: req.oidc.isAuthenticated() ? req.oidc.user.sub : '', for_post: true, target_id:val.rows[0].id }))
 				}
 			})
 			Promise.all(voteGetters).then(voteVals => {
@@ -213,13 +260,14 @@ app.get('/api/post', (req, res) => {
 		selectCommentsFromPostID({ id }).then(commentResponse => {
 			let returnObject = {
 				...response.rows[0],
-				userOwns: isCurrentUser(response.rows[0].author_id, req.oidc.user.sub),
+				logged_in: req.oidc.isAuthenticated(),
+				userOwns: isCurrentUser(response.rows[0].author_id, req.oidc.isAuthenticated() ? req.oidc.user.sub : ''),
 				score: calcPostScore(response.rows[0].rating, response.rows[0].posted_at, commentResponse.rows.length),
 				replyCount: commentResponse.rows.length,
 				replies: commentResponse.rows.map(reply => {
 					return {
 						...reply,
-						userOwns: isCurrentUser(reply.author_id, req.oidc.user.sub),
+						userOwns: isCurrentUser(reply.author_id, req.oidc.isAuthenticated() ? req.oidc.user.sub : ''),
 						score: calcCommentScore(reply.rating, reply.submitted_at)
 					}
 				})
@@ -230,12 +278,12 @@ app.get('/api/post', (req, res) => {
 
 				returnObject.author = userResponse.rows[0]
 
-				hasUserVoted({ user_id: req.oidc.user.sub, for_post: true, target_id:returnObject.id }).then(postVoteResponse => {
+				hasUserVoted({ user_id: req.oidc.isAuthenticated() ? req.oidc.user.sub : '', for_post: true, target_id:returnObject.id }).then(postVoteResponse => {
 					returnObject.hasUserVoted = postVoteResponse.rows.length > 0 ? postVoteResponse.rows[0] : 'false'
 
 					let voteGetters = []
 					returnObject.replies.forEach(val => {
-						voteGetters.push(hasUserVoted({ user_id: req.oidc.user.sub, for_post: false, target_id:val.id }))
+						voteGetters.push(hasUserVoted({ user_id: req.oidc.isAuthenticated() ? req.oidc.user.sub : '', for_post: false, target_id:val.id }))
 					})
 					Promise.all(voteGetters).then(voteVals => {
 						returnObject.replies = returnObject.replies.map((post, y) => {
@@ -291,7 +339,17 @@ app.delete('/api/post', (req, res) => {
 //USER
 //have tp get the user from database probably
 app.get('/api/currentUser', (req, res) => {
-	res.json({user_id: req.oidc.user.sub})
+	if (!req.oidc.isAuthenticated()){
+		console.log('yeee')
+		res.json({logged_in: false})
+		return
+	}
+	selectUser({id: req.oidc.user.sub}).then((response) => {
+		res.json({
+			...response.rows[0],
+			logged_in: true
+		})
+	})
 })
 
 //VOTE
@@ -342,5 +400,14 @@ app.delete('/api/follow', (req, res) => {
 		res.json(response.rows[0])
 	})
 })
+
+if (process.env.NODE_ENV === 'production') {
+	const path = require('path')
+	app.use(express.static(path.join(__dirname, 'build')));
+  
+	app.get('/*', (req, res) => {
+	  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+	});
+  }
 
 app.listen(port)

@@ -37,3 +37,12 @@ SELECT id, owner_id, owner_id, title, sidebar,
     ) as 
 user_following FROM communities WHERE id = $1;
         
+SELECT 
+comments.id, 
+author_id, 
+users.username AS author_username, 
+content, 
+for_post, 
+submitted_at, 
+rating FROM comments
+JOIN users ON comments.author_id = users.id;

@@ -2,7 +2,17 @@ const { dbQuery } = require('../lib/dbQuery')
 
 function selectComment(detailsObject){
     const { id } = detailsObject 
-    return dbQuery('select * from comments where id = $1',
+    return dbQuery(`
+    SELECT 
+    comments.id, 
+    author_id, 
+    users.username AS author_username, 
+    content, 
+    for_post, 
+    submitted_at, 
+    rating FROM comments
+    JOIN users ON comments.author_id = users.id;
+    `,
     [id])
 }
 
@@ -76,6 +86,7 @@ function selectFollowedCommunities(detailsObject){
 
 function selectSearchedCommunities(detailsObject){
     const { id, search } = detailsObject
+    console.log(search)
     return dbQuery(`
     SELECT 
     ($1 = owner_id) AS user_owns,
@@ -85,7 +96,7 @@ function selectSearchedCommunities(detailsObject){
     communities.id,title,sidebar
     FROM communities 
     JOIN users ON users.id = communities.owner_id
-    JOIN follows ON follows.community_id = communities.id
+    LEFT JOIN follows ON follows.community_id = communities.id
     WHERE communities.title LIKE '%${search}%'
     GROUP BY users.id, users.username, communities.id, title, sidebar;`,
     [id]);
@@ -109,7 +120,7 @@ function selectPopularCommunities(detailsObject){
     SELECT Count(id) 
     FROM follows 
     WHERE community_id = communities.id) 
-    > 1
+    > 0
     AND 
     owner_id != $1
     AND (
@@ -120,7 +131,7 @@ function selectPopularCommunities(detailsObject){
     = 0
     GROUP BY users.id, users.username, communities.id, title, sidebar
     ORDER BY RANDOM()
-    LIMIT 3;`,
+    LIMIT 7;`,
     [id]);
 }
 
@@ -144,9 +155,11 @@ function selectAllPostsOfCommunities(detailsObject){
 function selectCommentsFromPostID(detailsObject){
     const { id } = detailsObject
     return dbQuery(`
-    select id, author_id, content, target_id, submitted_at, 
+    select comments.id, author_id, content, target_id, submitted_at, users.username,
         (select sum(vote_weight) from votes WHERE for_post = false and target_id = comments.id) AS rating
-    from comments where target_id = $1;`, 
+    from comments 
+    join users on comments.author_id = users.id
+    where target_id = $1;`, 
     [id])
 }
 
